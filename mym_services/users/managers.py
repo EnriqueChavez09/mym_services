@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import UserManager as DjangoUserManager
 
+from mym_services.utils.customs_managers import CustomManager
+
 if TYPE_CHECKING:
     from .models import User  # noqa: F401
 
@@ -40,3 +42,11 @@ class UserManager(DjangoUserManager["User"]):
             raise ValueError(msg)
 
         return self._create_user(email, password, **extra_fields)
+
+
+class CompanyManager(CustomManager):
+    pass
+
+
+class ContactManager(CustomManager):
+    pass

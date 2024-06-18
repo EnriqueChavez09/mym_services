@@ -1,38 +1,72 @@
 from typing import ClassVar
 
 from django.contrib.auth.models import AbstractUser
-from django.db.models import CharField
-from django.db.models import EmailField
-from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
+from django.db import models
+from simple_history.models import HistoricalRecords
 
+from mym_services.utils.customs_models import CustomModel
+
+from .managers import CompanyManager
+from .managers import ContactManager
 from .managers import UserManager
 
 
-class User(AbstractUser):
-    """
-    Default custom user model for mym_services.
-    If adding fields that need to be filled at user signup,
-    check forms.SignupForm and forms.SocialSignupForms accordingly.
-    """
-
-    # First and last name do not cover name patterns around the globe
-    name = CharField(_("Name of User"), blank=True, max_length=255)
-    first_name = None  # type: ignore[assignment]
-    last_name = None  # type: ignore[assignment]
-    email = EmailField(_("email address"), unique=True)
-    username = None  # type: ignore[assignment]
+class User(AbstractUser, CustomModel):
+    username = None
+    first_name = None
+    last_name = None
+    email = models.EmailField(verbose_name="Correo", unique=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
     objects: ClassVar[UserManager] = UserManager()
 
-    def get_absolute_url(self) -> str:
-        """Get URL for user's detail view.
 
-        Returns:
-            str: URL for user detail.
+class Company(CustomModel):
+    ruc_number = models.CharField(
+        verbose_name="Número de RUC",
+        max_length=11,
+        unique=True,
+    )
+    company_name = models.CharField(verbose_name="Razón Social", max_length=100)
+    address = models.CharField(verbose_name="Dirección", max_length=100)
+    district = models.CharField(verbose_name="Distrito", max_length=100)
 
-        """
-        return reverse("users:detail", kwargs={"pk": self.id})
+    history = HistoricalRecords()
+
+    objects = CompanyManager()
+
+    def __str__(self):
+        return f"{self.company_name} - {self.ruc_number}"
+
+    class Meta:
+        verbose_name = "Empresa"
+        verbose_name_plural = "Empresas"
+        ordering = ["company_name"]
+
+
+class Contact(CustomModel):
+    company = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name="contacts",
+        verbose_name="Empresa",
+    )
+
+    full_names = models.CharField(verbose_name="Nombres completos", max_length=11)
+    phone = models.CharField(verbose_name="Celular", max_length=100, unique=True)
+    address = models.CharField(verbose_name="Dirección", max_length=100)
+    email = models.EmailField(verbose_name="Correo", unique=True)
+
+    history = HistoricalRecords()
+
+    objects = ContactManager()
+
+    def __str__(self):
+        return f"{self.full_names}"
+
+    class Meta:
+        verbose_name = "Contacto"
+        verbose_name_plural = "Contactos"
+        ordering = ["-created"]

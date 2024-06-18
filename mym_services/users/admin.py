@@ -9,9 +9,12 @@ from django.contrib import admin
 from django.contrib.auth import admin as auth_admin
 from django.contrib.sites.models import Site
 from django.utils.translation import gettext_lazy as _
+from simple_history.admin import SimpleHistoryAdmin
 
-from .forms import UserAdminChangeForm
-from .forms import UserAdminCreationForm
+from .forms import CustomUserChangeForm
+from .forms import CustomUserCreationForm
+from .models import Company
+from .models import Contact
 from .models import User
 
 if settings.DJANGO_ADMIN_FORCE_ALLAUTH:
@@ -30,28 +33,20 @@ admin.site.unregister(EmailAddress)
 
 @admin.register(User)
 class UserAdmin(auth_admin.UserAdmin):
-    form = UserAdminChangeForm
-    add_form = UserAdminCreationForm
+    form = CustomUserChangeForm
+    add_form = CustomUserCreationForm
     fieldsets = (
-        (None, {"fields": ("email", "password")}),
-        (_("Personal info"), {"fields": ("name",)}),
         (
-            _("Permissions"),
+            _("Credenciales"),
+            {"fields": ("email", "password")},
+        ),
+        (
+            _("Permisos"),
             {
-                "fields": (
-                    "is_active",
-                    "is_staff",
-                    "is_superuser",
-                    "groups",
-                    "user_permissions",
-                ),
+                "fields": ("is_staff", "is_superuser"),
             },
         ),
-        (_("Important dates"), {"fields": ("last_login", "date_joined")}),
     )
-    list_display = ["email", "name", "is_superuser"]
-    search_fields = ["name"]
-    ordering = ["id"]
     add_fieldsets = (
         (
             None,
@@ -61,3 +56,49 @@ class UserAdmin(auth_admin.UserAdmin):
             },
         ),
     )
+    list_display = ["email", "is_superuser"]
+    search_fields = ["email"]
+    ordering = ["-pk"]
+
+
+@admin.register(Company)
+class CompanyAdmin(SimpleHistoryAdmin):
+    fieldsets = (
+        (
+            _("Información General"),
+            {"fields": ("ruc_number", "company_name", "address", "district")},
+        ),
+    )
+    list_display = [
+        "id",
+        "ruc_number",
+        "company_name",
+        "address",
+        "district",
+        "is_delete",
+    ]
+    search_fields = ["ruc_number", "company_name"]
+    list_display_links = ["id", "ruc_number", "company_name"]
+
+
+@admin.register(Contact)
+class ContactAdmin(SimpleHistoryAdmin):
+    fieldsets = (
+        (
+            _("Información General"),
+            {"fields": ("company", "full_names", "phone", "address", "email")},
+        ),
+    )
+    list_display = [
+        "id",
+        "company",
+        "full_names",
+        "phone",
+        "address",
+        "email",
+        "is_delete",
+    ]
+    search_fields = ["full_names", "phone", "email"]
+    list_display_links = ["id", "full_names", "company"]
+    list_filter = ["company"]
+    date_hierarchy = "created"
