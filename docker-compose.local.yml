@@ -1,0 +1,43 @@
+volumes:
+  mym_services_local_postgres_data: {}
+  mym_services_local_postgres_data_backups: {}
+  mym_services_local_redis_data: {}
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    image: mym_services_local_django
+    container_name: mym_services_local_django
+    restart: on-failure:10
+    depends_on:
+      - postgres
+    volumes:
+      - .:/app:z
+    env_file:
+      - ./.envs/.local/.django
+      - ./.envs/.local/.postgres
+    ports:
+      - "8000:8000"
+    command: /start
+
+  postgres:
+    build:
+      context: .
+      dockerfile: ./compose/production/postgres/Dockerfile
+    image: mym_services_production_postgres
+    container_name: mym_services_local_postgres
+    restart: on-failure:10
+    volumes:
+      - mym_services_local_postgres_data:/var/lib/postgresql/data
+      - mym_services_local_postgres_data_backups:/backups
+    env_file:
+      - ./.envs/.local/.postgres
+
+  redis:
+    image: redis:6
+    container_name: mym_services_local_redis
+    restart: on-failure:10
+    volumes:
+      - mym_services_local_redis_data:/data
