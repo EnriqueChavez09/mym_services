@@ -5,6 +5,7 @@ from django.db import models
 from simple_history.models import HistoricalRecords
 
 from mym_services.utils.customs_models import CustomModel
+from mym_services.utils.regexs import phone_validator
 
 from .managers import CompanyManager
 from .managers import ContactManager
@@ -35,7 +36,7 @@ class Company(CustomModel):
 
     history = HistoricalRecords()
 
-    objects = CompanyManager()
+    objects: ClassVar[UserManager] = CompanyManager()
 
     def __str__(self):
         return f"{self.company_name} - {self.ruc_number}"
@@ -54,14 +55,22 @@ class Contact(CustomModel):
         verbose_name="Empresa",
     )
 
-    full_names = models.CharField(verbose_name="Nombres completos", max_length=11)
-    phone = models.CharField(verbose_name="Celular", max_length=100, unique=True)
+    full_names = models.CharField(verbose_name="Nombres completos", max_length=100)
+    phone = models.CharField(
+        verbose_name="Celular",
+        max_length=9,
+        unique=True,
+        validators=[phone_validator],
+    )
     address = models.CharField(verbose_name="Dirección", max_length=100)
     email = models.EmailField(verbose_name="Correo", unique=True)
 
     history = HistoricalRecords()
 
-    objects = ContactManager()
+    objects: ClassVar[UserManager] = ContactManager()
+
+    def get_company(self):
+        return self.company.company_name
 
     def __str__(self):
         return f"{self.full_names}"
