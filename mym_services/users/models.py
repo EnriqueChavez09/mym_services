@@ -59,11 +59,10 @@ class Contact(CustomModel):
     phone = models.CharField(
         verbose_name="Celular",
         max_length=9,
-        unique=True,
         validators=[phone_validator],
     )
     address = models.CharField(verbose_name="Dirección", max_length=100)
-    email = models.EmailField(verbose_name="Correo", unique=True)
+    email = models.EmailField(verbose_name="Correo")
 
     history = HistoricalRecords()
 

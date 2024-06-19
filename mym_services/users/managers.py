@@ -49,4 +49,8 @@ class CompanyManager(CustomManager):
 
 
 class ContactManager(CustomManager):
-    pass
+    def check_if_there_is_any_record_according_to_email(self, email: str):
+        return self.get_not_deleted().filter(email=email).exists()
+
+    def check_if_there_is_any_record_according_to_phone(self, phone: str):
+        return self.get_not_deleted().filter(phone=phone).exists()
